@@ -103,12 +103,21 @@ def createHeatmap(timePoint):
 def construireGrille(gr):
     layout = gr.getLayoutProperty("viewLayout")
     tps = gr.getDoubleProperty("Tps")
-    count = 1
+    decalageX = 10
+    decalageX = 10
+    count = 0
+    Locus = gr.getStringProperty("Locus")
+    allLocus = []
     for n in gr.getNodes():
+        currentLocus = Locus[n]
         x = count
+        for i in range(len(allLocus)):
+          if allLocus[i] == currentLocus:
+            x = i
         y = tps[n]
-        layout[n] = tlp.Coord(x, y, 0)
-        count += 1
+        layout[n] = tlp.Coord(x + decalageX, y + decalageY, 0)
+        if x != count:
+          count += 1
 
 def main(graph):
   #
