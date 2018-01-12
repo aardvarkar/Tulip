@@ -36,7 +36,7 @@ def pretraitement(graph, Locus, Negative, Positive, viewBorderColor, viewLabel, 
     x = random.random() * size
     y = random.random() * size
     viewLayout[n] = tlp.Coord(x, y, 0)
-    viewSize[n] = tlp.Size(10,10,10)
+    viewSize[n] = tlp.Size(10,3,10)
     viewLabel[n] = Locus[n]
   for n in graph.getEdges():
     if Negative[n] == True:
@@ -53,34 +53,73 @@ def applyModelForce(graph, viewLayout):
   params = tlp.getDefaultPluginParameters('FM^3 (OGDF)', graph)
   success = graph.applyLayoutAlgorithm('FM^3 (OGDF)', viewLayout, params)
 
+def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s):
+  graphPartition = graph.addCloneSubGraph("GraphPartition")
+  for n in graphPartition.getEdges():
+    graphPartition.delEdge(n)
+  listOfNodes=[]
+  for n in graphPartition.getNodes():
+    listOfNodes.append(n)
+  for n in range(len(listOfNodes)):
+    for m in range(n+1,len(listOfNodes)):
+      graphPartition.addEdge(listOfNodes[n], listOfNodes[m])
+  poids = graphPartition.getDoubleProperty("Weight")
+  expression_lvl=graphPartition.getDoubleProperty("Expression_lvl")
+  for n in graphPartition.getNodes():
+    expression_lvl[n] = (tp1_s[n] + tp2_s[n] + tp3_s[n] + tp4_s[n] + tp5_s[n] + tp6_s[n] + tp7_s[n] + tp8_s[n] + tp9_s[n] + tp10_s[n] + tp11_s[n] + tp12_s[n] + tp13_s[n] + tp14_s[n] + tp15_s[n] + tp16_s[n] + tp17_s[n])/17
+  for n in graphPartition.getEdges():
+    poids[n] = abs(expression_lvl[graphPartition.source(n)]-expression_lvl[graphPartition.target(n)])
+    if poids[n] > 0.05 or expression_lvl[graphPartition.source(n)] == 0:
+      graphPartition.delEdge(n)
+  params=tlp.getDefaultPluginParameters('MCL Clustering', graphPartition)
+  params['weights']=poids
+  resultMetric = graphPartition.getDoubleProperty('resultMetric')
+  success = graphPartition.applyDoubleAlgorithm('MCL Clustering', resultMetric, params)
+  params = tlp.getDefaultPluginParameters('Equal Value', graphPartition)
+  params['Property'] = resultMetric
+  success = graphPartition.applyAlgorithm('Equal Value', params)
 
-def partitionnement1(working, tp17_s):
-  for n in graph.getEdges():
-    poids = abs(tp17_s[graph.source(n)]-tp17_s[graph.target(n)])
-    print(poids)
+def createHeatmap(timePoint):
+  heatmap=graph.addCloneSubGraph("heatmap")
+  expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
+  tps=heatmap.getDoubleProperty("Tps")
+  Locus = heatmap.getStringProperty("Locus")
+  for n in heatmap.getEdges():
+    heatmap.delEdge(n)
+  nodesListe=[]
+  for n in heatmap.getNodes():
+    nodesListe.append(n)
+  for n in nodesListe:
+    expression_lvl[n]=timePoint[0][n]
+    tps[n]=1
+    addedNodes = heatmap.addNodes(16)
+    tps=heatmap.getDoubleProperty("Tps")
+    for m in range(len(addedNodes)):
+      expression_lvl[addedNodes[m]]=timePoint[m][n]
+      tps[addedNodes[m]]=m+2
+      Locus[addedNodes[m]]=Locus[n]
+  return heatmap
 
-def test(graph):
-  tp17_s = graph.getDoubleProperty("tp17 s")
-  test = graph.getDoubleProperty("test")
-
-  params = tlp.getDefaultPluginParameters('K-Cores', graph)
-  params["metric"] = test
-  resultMetric = graph.getDoubleProperty('resultMetric')
-  success = graph.applyDoubleAlgorithm('K-Cores', resultMetric, params)
-
-def construireGrille(gr, layout):
-    for n in graph.getNodes():
-        x = gene[n]
-        y = 2
-        viewLayout[n] = tlp.Coord(x, y, 0)
+def construireGrille(gr):
+    layout = gr.getLayoutProperty("viewLayout")
+    tps = gr.getDoubleProperty("Tps")
+    count = 1
+    for n in gr.getNodes():
+        x = count
+        y = tps[n]
+        layout[n] = tlp.Coord(x, y, 0)
+        count += 1
 
 def main(graph):
-
-
-
   #
-  clone = graph.addCloneSubGraph("Clone")
-  working = graph.addCloneSubGraph("Working")
+  if graph.getSubGraph("Clone") == None:
+    clone = graph.addCloneSubGraph("Clone")
+  else :
+    clone=graph.getSubGraph("Clone")
+  if graph.getSubGraph("Working") == None:
+    working = graph.addCloneSubGraph("Working")
+  else :
+    working=graph.getSubGraph("Working")
 
   Locus = working.getStringProperty("Locus")
   Negative = working.getBooleanProperty("Negative")
@@ -124,8 +163,10 @@ def main(graph):
   viewTexture = working.getStringProperty("viewTexture")
   viewTgtAnchorShape = working.getIntegerProperty("viewTgtAnchorShape")
   viewTgtAnchorSize = working.getSizeProperty("viewTgtAnchorSize")
+  timePoint = [tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s]
 
-  #pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
-  #applyModelForce(working, viewLayout)
-  test(working)
-  #partitionnement1(working, tp17_s)
+  pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
+  applyModelForce(working, viewLayout)
+  #partitionnement1(graph, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s)
+  heatmap = createHeatmap(timePoint)
+  construireGrille(heatmap)
