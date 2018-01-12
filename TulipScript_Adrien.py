@@ -55,8 +55,6 @@ def applyModelForce(graph, viewLayout):
  
 def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s):
   graphPartition = graph.addCloneSubGraph("GraphPartition")
-  for n in graphPartition.getNodes():
-    print(n)
   for n in graphPartition.getEdges():
     graphPartition.delEdge(n)
   listOfNodes=[]
@@ -73,6 +71,33 @@ def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp
     poids[n] = abs(expression_lvl[graphPartition.source(n)]-expression_lvl[graphPartition.target(n)])
     if poids[n] > 0.05 or expression_lvl[graphPartition.source(n)] == 0:
       graphPartition.delEdge(n)
+  params=tlp.getDefaultPluginParameters('MCL Clustering', graphPartition)
+  params['weights']=poids
+  resultMetric = graphPartition.getDoubleProperty('resultMetric')
+  success = graphPartition.applyDoubleAlgorithm('MCL Clustering', resultMetric, params)
+  params = tlp.getDefaultPluginParameters('Equal Value', graphPartition)
+  params['Property'] = resultMetric
+  success = graphPartition.applyAlgorithm('Equal Value', params)
+  
+def createHeatmap(timePoint):
+  heatmap=graph.addCloneSubGraph("heatmap")
+  expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
+  tps=heatmap.getDoubleProperty("Tps")
+  Locus = heatmap.getStringProperty("Locus")
+  for n in heatmap.getEdges():
+    heatmap.delEdge(n)
+  nodesListe=[]
+  for n in heatmap.getNodes():
+    nodesListe.append(n)
+  for n in nodesListe:
+    expression_lvl[n]=timePoint[0][n]
+    tps[n]=1
+    addedNodes = heatmap.addNodes(16)
+    tps=heatmap.getDoubleProperty("Tps")
+    for m in range(len(addedNodes)):
+      expression_lvl[addedNodes[m]]=timePoint[m][n]
+      tps[addedNodes[m]]=m+2
+      Locus[addedNodes[m]]=Locus[n]
 
 def main(graph): 
   #
@@ -127,8 +152,10 @@ def main(graph):
   viewTexture = working.getStringProperty("viewTexture")
   viewTgtAnchorShape = working.getIntegerProperty("viewTgtAnchorShape")
   viewTgtAnchorSize = working.getSizeProperty("viewTgtAnchorSize")
+  timePoint = [tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s]
 
   print(Locus)
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
-  partitionnement1(graph, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s)
+  #partitionnement1(graph, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s)
+  createHeatmap(timePoint)
