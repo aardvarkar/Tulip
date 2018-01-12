@@ -54,7 +54,7 @@ def applyModelForce(graph, viewLayout):
   success = graph.applyLayoutAlgorithm('FM^3 (OGDF)', viewLayout, params)
 
 def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s):
-  graphPartition = graph.addCloneSubGraph("GraphPartition")
+  graphPartition = root.addCloneSubGraph("GraphPartition")
   for n in graphPartition.getEdges():
     graphPartition.delEdge(n)
   listOfNodes=[]
@@ -79,7 +79,11 @@ def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp
   params['Property'] = resultMetric
   success = graphPartition.applyAlgorithm('Equal Value', params)
 
-def createHeatmap(timePoint):
+def createHeatmap(graph, timePoint):
+  if graph.getSubGraph("heatmap") != None:
+    heatmap = graph.getSubGraph("heatmap")
+    graph.delSubGraph(heatmap)
+
   heatmap=graph.addCloneSubGraph("heatmap")
   expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
   tps=heatmap.getDoubleProperty("Tps")
@@ -92,32 +96,52 @@ def createHeatmap(timePoint):
   for n in nodesListe:
     expression_lvl[n]=timePoint[0][n]
     tps[n]=1
-    addedNodes = heatmap.addNodes(16)
+    addedNodes = heatmap.addNodes(17)
     tps=heatmap.getDoubleProperty("Tps")
     for m in range(len(addedNodes)):
       expression_lvl[addedNodes[m]]=timePoint[m][n]
-      tps[addedNodes[m]]=m+2
+      tps[addedNodes[m]]=m+1
       Locus[addedNodes[m]]=Locus[n]
+  for n in nodesListe:
+    heatmap.delNode(n)
   return heatmap
+  
+def colorHeatmap(graph):
+  viewBorderColor = graph.getColorProperty("viewBorderColor")
+  viewColor = graph.getColorProperty("viewColor")
+  expression_lvl=graph.getDoubleProperty("Expression_lvl")
+  min_lvl = expression_lvl.getNodeDoubleMin()
+  max_lvl = expression_lvl.getNodeDoubleMax()
+  colorScale = tlp.ColorScale([])
+  colors = [tlp.Color.Blue, tlp.Color.Red]
+  colorScale.setColorScale(colors)
+  for n in graph.getNodes():
+    viewColor[n]=colorScale.getColorAtPos((expression_lvl[n]-min_lvl)/(max_lvl-min_lvl))
+    viewBorderColor[n]=viewColor[n]
+  
+  
 
 def construireGrille(gr):
     layout = gr.getLayoutProperty("viewLayout")
     tps = gr.getDoubleProperty("Tps")
-    decalageX = 10
-    decalageX = 10
-    count = 0
+    viewSize = gr.getSizeProperty("viewSize")
+    decalageX = 100
+    decalageY = 1.5
+    nbTraites = 0
     Locus = gr.getStringProperty("Locus")
-    allLocus = []
+    locusToY = {}
     for n in gr.getNodes():
         currentLocus = Locus[n]
-        x = count
-        for i in range(len(allLocus)):
-          if allLocus[i] == currentLocus:
-            x = i
-        y = tps[n]
-        layout[n] = tlp.Coord(x + decalageX, y + decalageY, 0)
-        if x != count:
-          count += 1
+        viewSize[n]=tlp.Size(decalageX,decalageY,1)
+        x = tps[n]
+        y = nbTraites
+        if currentLocus in locusToY :
+          y = locusToY[currentLocus]
+        else:
+          nbTraites += 1
+        locusToY[currentLocus] = y
+       
+        layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
 
 def main(graph):
   #
@@ -174,8 +198,10 @@ def main(graph):
   viewTgtAnchorSize = working.getSizeProperty("viewTgtAnchorSize")
   timePoint = [tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s]
 
-  pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
-  applyModelForce(working, viewLayout)
+  #pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
+  #applyModelForce(working, viewLayout)
   #partitionnement1(graph, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s)
-  heatmap = createHeatmap(timePoint)
+  #heatmap = createHeatmap(working, timePoint)
+  heatmap = working.getSubGraph("heatmap")
+  colorHeatmap(heatmap)
   construireGrille(heatmap)
