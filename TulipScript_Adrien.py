@@ -65,18 +65,14 @@ def partitionnement1(root, working, tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp
   for n in range(len(listOfNodes)):
     for m in range(n+1,len(listOfNodes)):
       graphPartition.addEdge(listOfNodes[n], listOfNodes[m])
-  
-  
-  '''
-  poids = graph.getDoubleProperty("Weight")
-  expression_lvl=graph.getDoubleProperty("Expression_lvl")
-  for n in graph.getNodes():
+  poids = graphPartition.getDoubleProperty("Weight")
+  expression_lvl=graphPartition.getDoubleProperty("Expression_lvl")
+  for n in graphPartition.getNodes():
     expression_lvl[n] = (tp1_s[n] + tp2_s[n] + tp3_s[n] + tp4_s[n] + tp5_s[n] + tp6_s[n] + tp7_s[n] + tp8_s[n] + tp9_s[n] + tp10_s[n] + tp11_s[n] + tp12_s[n] + tp13_s[n] + tp14_s[n] + tp15_s[n] + tp16_s[n] + tp17_s[n])/17
-  for n in graph.getEdges():
-    poids[n] = abs(expression_lvl[graph.source(n)]-expression_lvl[graph.target(n)])
-    if poids[n] < 4 :
-      graph.delEdge(n)
-  '''
+  for n in graphPartition.getEdges():
+    poids[n] = abs(expression_lvl[graphPartition.source(n)]-expression_lvl[graphPartition.target(n)])
+    if poids[n] > 0.05 or expression_lvl[graphPartition.source(n)] == 0:
+      graphPartition.delEdge(n)
 
 def main(graph): 
   #
