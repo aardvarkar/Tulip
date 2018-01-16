@@ -96,14 +96,18 @@ def createDistanceGraph(graph):
         poids[newEdge] = distance
   return distanceGraph
    
-def partitionnement(graph):
+def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
+  if currentPartition == nbPartitionMax:
+    return None
   params=tlp.getDefaultPluginParameters('MCL Clustering')
   params['weights'] = graph.getDoubleProperty("Weight")
-  resultMetric = graph.getDoubleProperty('resultMetric')
+  resultMetric = graph.getDoubleProperty('resultMetric' + str(currentPartition+1))
   success = graph.applyDoubleAlgorithm('MCL Clustering', resultMetric, params)
   params = tlp.getDefaultPluginParameters('Equal Value', graph)
   params['Property'] = resultMetric
   success = graph.applyAlgorithm('Equal Value', params)
+  for sousGraph in graph.getSubGraphs():
+    partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
   
   
 # Partie 3
@@ -117,8 +121,8 @@ def createHeatmap(graph, distanceGraph, timePoint):
   expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
   tps=heatmap.getDoubleProperty("Tps")
   Locus = heatmap.getStringProperty("Locus")
-  ResultMetric1=heatmap.getDoubleProperty('resultMetric')
-  ResultMetric2=distanceGraph.getDoubleProperty('resultMetric')
+  groupesHeatmap=heatmap.getDoubleProperty('resultMetric1')
+  groupes=distanceGraph.getDoubleProperty('resultMetric1')
   for n in heatmap.getEdges():
     heatmap.delEdge(n)
   nodesListe=[]
@@ -133,7 +137,7 @@ def createHeatmap(graph, distanceGraph, timePoint):
       expression_lvl[addedNodes[m]]=timePoint[m][n]
       tps[addedNodes[m]]=m+1
       Locus[addedNodes[m]]=Locus[n]
-      ResultMetric1[addedNodes[m]]= ResultMetric2[n]
+      groupesHeatmap[addedNodes[m]]= groupes[n]
   for n in nodesListe:
     heatmap.delNode(n)
   return heatmap
@@ -151,6 +155,7 @@ def colorHeatmap(graph):
     viewColor[n]=colorScale.getColorAtPos((expression_lvl[n]-min_lvl)/(max_lvl-min_lvl))
     viewBorderColor[n]=viewColor[n]
   
+'''
 def construireGrille(gr):
     layout = gr.getLayoutProperty("viewLayout")
     tps = gr.getDoubleProperty("Tps")
@@ -172,7 +177,43 @@ def construireGrille(gr):
         locusToY[currentLocus] = y
        
         layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
+'''
         
+
+def construireGrille(gr, increment):
+    layout = gr.getLayoutProperty("viewLayout")
+    tps = gr.getDoubleProperty("Tps")
+    groupes = gr.getDoubleProperty("resultMetric1")
+    viewSize = gr.getSizeProperty("viewSize")
+    decalageX = 100
+    decalageY = 1.5
+    Locus = gr.getStringProperty("Locus")
+    locusToY = {}
+    count = [0] * len(increment)
+    for n in gr.getNodes():
+        currentLocus = Locus[n]
+        viewSize[n]=tlp.Size(decalageX,decalageY,1)
+        x = tps[n]
+        if currentLocus in locusToY :
+          y = locusToY[currentLocus]
+        else:
+          y = increment[int(groupes[n])] + count[int(groupes[n])]
+          count[int(groupes[n])] += 1
+          locusToY[currentLocus] = y
+       
+        layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
+        
+def getIncrement(gr):
+  listeTmp = [0] * gr.numberOfSubGraphs()
+
+  for graph in gr.getSubGraphs():
+    resultMetric = graph.getDoubleProperty("resultMetric1")[graph.getOneNode()]
+    listeTmp[int(resultMetric)] = graph.numberOfNodes()
+  liste = [0]
+  for i in range(len(listeTmp)):
+    liste.append(listeTmp[i] + liste[i])
+  return liste
+
 
 #def changeGrille(graph):
   
@@ -187,6 +228,8 @@ def main(graph):
     working = graph.addCloneSubGraph("Working")
   else :
     working=graph.getSubGraph("Working")
+    working.clear()
+    tlp.copyToGraph(working, clone)
 
   Locus = working.getStringProperty("Locus")
   Negative = working.getBooleanProperty("Negative")
@@ -235,8 +278,9 @@ def main(graph):
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
-  partitionnement(distanceGraph)
+  partitionnement(distanceGraph, 2)
   heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
   colorHeatmap(heatmap)
-  construireGrille(heatmap)
+  increment=getIncrement(distanceGraph)
+  construireGrille(heatmap, increment)
