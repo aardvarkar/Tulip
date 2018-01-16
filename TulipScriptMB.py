@@ -124,24 +124,45 @@ def colorHeatmap(graph):
 def construireGrille(gr):
     layout = gr.getLayoutProperty("viewLayout")
     tps = gr.getDoubleProperty("Tps")
+    groupes = gr.getDoubleProperty("resultMetric")
     viewSize = gr.getSizeProperty("viewSize")
     decalageX = 100
     decalageY = 1.5
-    nbTraites = 0
     Locus = gr.getStringProperty("Locus")
     locusToY = {}
     for n in gr.getNodes():
         currentLocus = Locus[n]
         viewSize[n]=tlp.Size(decalageX,decalageY,1)
         x = tps[n]
-        y = nbTraites
         if currentLocus in locusToY :
           y = locusToY[currentLocus]
         else:
-          nbTraites += 1
-        locusToY[currentLocus] = y
+          y = increment[groupes[node]] + count[groupes[node]]
+          count[groupes[node]] += 1
+          locusToY[currentLocus] = y
        
         layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
+        
+def getIncrement(gr):
+  liste = [0]
+  i = 0
+  for graph in gr.getSubGraphs():
+    liste.append(graph.numberOfNodes()+liste[i])
+    i += 1
+  return liste
+
+def adjustGrille(gr, increment):
+  layout = gr.getLayoutProperty("viewLayout")
+  groupes = gr.getDoubleProperty("resultMetric")
+  tps = gr.getDoubleProperty("Tps")
+  decalageX = 100
+  decalageY = 1.5
+  count = [0] * len(increment)
+  for node in gr:
+    y = increment[groupes[node]] + count[groupes[node]]
+    x = tps[node]
+    count[groupes[node]] += 1
+    layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
 
 def main(graph):
   #
