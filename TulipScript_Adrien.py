@@ -108,7 +108,7 @@ def partitionnement(graph):
   
 # Partie 3
 
-def createHeatmap(graph, timePoint):
+def createHeatmap(graph, distanceGraph, timePoint):
   if graph.getSubGraph("heatmap") != None:
     heatmap = graph.getSubGraph("heatmap")
     graph.delSubGraph(heatmap)
@@ -117,6 +117,8 @@ def createHeatmap(graph, timePoint):
   expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
   tps=heatmap.getDoubleProperty("Tps")
   Locus = heatmap.getStringProperty("Locus")
+  ResultMetric1=heatmap.getDoubleProperty('resultMetric')
+  ResultMetric2=distanceGraph.getDoubleProperty('resultMetric')
   for n in heatmap.getEdges():
     heatmap.delEdge(n)
   nodesListe=[]
@@ -131,6 +133,7 @@ def createHeatmap(graph, timePoint):
       expression_lvl[addedNodes[m]]=timePoint[m][n]
       tps[addedNodes[m]]=m+1
       Locus[addedNodes[m]]=Locus[n]
+      ResultMetric1[addedNodes[m]]= ResultMetric2[n]
   for n in nodesListe:
     heatmap.delNode(n)
   return heatmap
@@ -169,6 +172,10 @@ def construireGrille(gr):
         locusToY[currentLocus] = y
        
         layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
+        
+
+#def changeGrille(graph):
+  
 
 def main(graph):
   #
@@ -229,7 +236,7 @@ def main(graph):
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
   partitionnement(distanceGraph)
-  heatmap = createHeatmap(working, timePoint)
+  heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
   colorHeatmap(heatmap)
   construireGrille(heatmap)
