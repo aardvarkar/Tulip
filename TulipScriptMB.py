@@ -181,12 +181,8 @@ def construireGrille(gr):
         
 
 def construireGrille(distance, gr):
-    increment = {}
-    tmp = 0
-    for graph in distance.getSubGraphs():
-      resultMetric = graph.getDoubleProperty("resultMetric1")[graph.getOneNode()]
-      increment[resultMetric] = tmp
-      tmp += graph.numberOfNodes()
+    increment = getIncrement(distance)
+    print (increment)
     
   
     layout = gr.getLayoutProperty("viewLayout")
@@ -218,18 +214,20 @@ def construireGrille(distance, gr):
        
         layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
         
-def getIncrement(gr):
-  listeTmp = [0] * gr.numberOfSubGraphs()
-  i = 0
-  tmp = [0] * gr.numberOfSubGraphs()
-  for graph in gr.getSubGraphs():
-    resultMetric = graph.getDoubleProperty("resultMetric1")[graph.getOneNode()]
-    listeTmp[int(resultMetric)] = graph.numberOfNodes()
-    tmp[int(resultMetric)] = i
-  liste = [0]
-  for i in range(len(listeTmp)):
-    liste.append(listeTmp[i] + liste[i])
-  return liste
+def getIncrement(gr, depth = 1, tmp = 0):
+      
+    increment = {}
+    for graph in gr.getSubGraphs():
+      resultMetric = graph.getDoubleProperty("resultMetric"+ str(depth))[graph.getOneNode()]
+      tmp += graph.numberOfNodes()
+      if graph.numberOfSubGraphs() > 0:
+        increment[resultMetric] = getIncrement(graph, depth+1, tmp)
+      else:
+        increment[resultMetric] = tmp
+    return increment
+        
+    
+      
 
 
 #def changeGrille(graph):
