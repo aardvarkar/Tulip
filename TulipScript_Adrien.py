@@ -93,15 +93,13 @@ def createDistanceGraph(graph):
   for i in range(len(listOfNodes)):
     for j in range(i+1,len(listOfNodes)):
       #distance = abs(expression_lvl[listOfNodes[i]]-expression_lvl[listOfNodes[j]])
-      '''
       distance=0
       for k in range(len(total_tps)):
         distance=distance+math.pow(abs(total_tps[k][listOfNodes[i]]-total_tps[k][listOfNodes[j]]),2)        
       distance=math.sqrt(distance)
-      '''
-      distance=calculPearson(listOfNodes, i, j, total_tps)
+      #distance=calculPearson(listOfNodes, i, j, total_tps)
       #if distance < 0.05 and expression_lvl[listOfNodes[i]] != 0:
-      if distance < 0.2 and distance != 0:
+      if distance < 1 and distance != 0:
         newEdge = distanceGraph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = distance
   return distanceGraph
