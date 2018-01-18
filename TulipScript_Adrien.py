@@ -93,17 +93,20 @@ def createDistanceGraph(graph):
   for i in range(len(listOfNodes)):
     for j in range(i+1,len(listOfNodes)):
       #distance = abs(expression_lvl[listOfNodes[i]]-expression_lvl[listOfNodes[j]])
+      
       distance=0
       for k in range(len(total_tps)):
         distance=distance+math.pow(abs(total_tps[k][listOfNodes[i]]-total_tps[k][listOfNodes[j]]),2)        
       distance=math.sqrt(distance)
+      
       #distance=calculPearson(listOfNodes, i, j, total_tps)
       #if distance < 0.05 and expression_lvl[listOfNodes[i]] != 0:
-      if distance < 1 and distance != 0:
+      if distance < 2 and distance != 0:
         newEdge = distanceGraph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = distance
   return distanceGraph
-   
+
+
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   if currentPartition == nbPartitionMax:
     return None
@@ -116,6 +119,22 @@ def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   success = graph.applyAlgorithm('Equal Value', params)
   for sousGraph in graph.getSubGraphs():
     partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
+
+'''
+def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
+  if currentPartition == nbPartitionMax:
+    return None
+  params=tlp.getDefaultPluginParameters('Strength Clustering', graph)
+  params['metric'] = graph.getDoubleProperty("Weight")
+  resultMetric = graph.getDoubleProperty('resultMetric' + str(currentPartition+1))
+  success = graph.applyDoubleAlgorithm('Strength Clustering', resultMetric, params)
+  params = tlp.getDefaultPluginParameters('Equal Value', graph)
+  params['Property'] = resultMetric
+  success = graph.applyAlgorithm('Equal Value', params)
+  for sousGraph in graph.getSubGraphs():
+    partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
+'''
+
     
 def calculPearson(listOfNodes, i, j, total_tps):
   Nb=len(total_tps)
@@ -325,7 +344,7 @@ def main(graph):
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
-  partitionnement(distanceGraph, 4)
+  partitionnement(distanceGraph, 3)
   heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
   colorHeatmap(heatmap)
