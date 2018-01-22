@@ -14,8 +14,8 @@
 #   * Ctrl + Space  : show auto-completion dialog.
 
 from tulip import tlp
-import scipy
-from scipy import stats
+#import scipy
+#from scipy import stats
 import random
 import math
 
@@ -117,7 +117,7 @@ def createDistanceGraph(graph):
         '''
   return distanceGraph
 
-
+'''
 def calculPearson(graph, listOfNodes, total_tps):
   poids = graph.getDoubleProperty("Weight")  
   Nb=len(total_tps)
@@ -130,16 +130,16 @@ def calculPearson(graph, listOfNodes, total_tps):
   for i in range(len(listOfNodes)):
     for j in range(i+1,len(listOfNodes)):
       pearson=scipy.stats.pearsonr(listTpsAll[i], listTpsAll[i])[0]
-      if pearson > 0.95:
+      if pearson > 0.9:
         newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = pearson
-
+'''
 
 
     
   
   
-'''
+
 def calculPearson(graph, listOfNodes, total_tps):
   sommeListe=[]
   somme_carreListe=[]
@@ -167,10 +167,12 @@ def calculPearson(graph, listOfNodes, total_tps):
       else:
         r_value=(Nb*somme_produit-sommeListe[i]*sommeListe[j])/denominator
       distance=1-r_value
-      if distance < 0.9:
+      if r_value > 0.9:
+      #if distance < 0.1:
         newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = r_value
-'''
+        #poids[newEdge] = distance
+
 
 
 
@@ -212,6 +214,9 @@ def createHeatmap(graph, distanceGraph, timePoint):
     graph.delSubGraph(heatmap)
 
   heatmap=graph.addCloneSubGraph("heatmap")
+  heatmap.clear()
+  tlp.copyToGraph(heatmap, distanceGraph)
+
   expression_lvl=heatmap.getDoubleProperty("Expression_lvl")
   tps=heatmap.getDoubleProperty("Tps")
   Locus = heatmap.getStringProperty("Locus")
@@ -220,8 +225,12 @@ def createHeatmap(graph, distanceGraph, timePoint):
   for n in heatmap.getEdges():
     heatmap.delEdge(n)
   nodesListe=[]
+  #for n in heatmap.getNodes():
+  count=0
   for n in heatmap.getNodes():
+    count=count+1
     nodesListe.append(n)
+  print(count)
   for n in nodesListe:
     expression_lvl[n]=timePoint[0][n]
     tps[n]=1
@@ -231,7 +240,7 @@ def createHeatmap(graph, distanceGraph, timePoint):
       expression_lvl[addedNodes[m]]=timePoint[m][n]
       tps[addedNodes[m]]=m+1
       Locus[addedNodes[m]]=Locus[n]
-      groupesHeatmap[addedNodes[m]]= groupes[n]
+      groupesHeatmap[addedNodes[m]]= groupesHeatmap[n]
   for n in nodesListe:
     heatmap.delNode(n)
   return heatmap
@@ -395,10 +404,11 @@ def main(graph):
       working.delNode(i)
   '''
 
+
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
-  partitionnement(distanceGraph, 1)
+  partitionnement(distanceGraph, 3)
   heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
   colorHeatmap(heatmap)
