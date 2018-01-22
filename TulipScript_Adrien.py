@@ -38,18 +38,18 @@ def pretraitement(graph, Locus, Negative, Positive, viewBorderColor, viewLabel, 
     x = random.random() * size
     y = random.random() * size
     viewLayout[n] = tlp.Coord(x, y, 0)
-    viewSize[n] = tlp.Size(10,3,10)
+    viewSize[n] = tlp.Size(10000,3000,10)
     viewLabel[n] = Locus[n]
   for n in graph.getEdges():
     if Negative[n] == True:
       if Positive[n] == True:
-        viewBorderColor[n] = tlp.Color.Blue
+        viewBorderColor[n] = tlp.Color.Black
       else:
-        viewBorderColor[n] = tlp.Color.Green
+        viewBorderColor[n] = tlp.Color.Blue
     elif Positive[n] == True:
-      viewBorderColor[n] = tlp.Color.Red
-    else:
-      viewBorderColor[n] = tlp.Color.Violet
+      viewBorderColor[n] = tlp.Color.Green
+  for n in graph.getNodes():
+    viewBorderColor[n] = tlp.Color.Red
 
 def applyModelForce(graph, viewLayout):
   params = tlp.getDefaultPluginParameters('FM^3 (OGDF)', graph)
@@ -88,23 +88,51 @@ def createDistanceGraph(graph):
     distanceGraph.delEdge(n)
   listOfNodes=[]
   for n in distanceGraph.getNodes():
-    listOfNodes.append(n)
     expression_lvl[n] = (tp1_s[n] + tp2_s[n] + tp3_s[n] + tp4_s[n] + tp5_s[n] + tp6_s[n] + tp7_s[n] + tp8_s[n] + tp9_s[n] + tp10_s[n] + tp11_s[n] + tp12_s[n] + tp13_s[n] + tp14_s[n] + tp15_s[n] + tp16_s[n] + tp17_s[n])/17
+    if expression_lvl[n]==0:
+      distanceGraph.delNode(n)
+    else:
+      listOfNodes.append(n)
   for i in range(len(listOfNodes)):
+    somme_i=0
+    somme_i_carre=0
+    Nb=len(total_tps)
+    for k in range(Nb):
+      value_k_of_i=total_tps[k][listOfNodes[i]]
+      somme_i=somme_i+value_k_of_i
+      somme_i_carre=somme_i_carre+math.pow(value_k_of_i,2)  
     for j in range(i+1,len(listOfNodes)):
       #distance = abs(expression_lvl[listOfNodes[i]]-expression_lvl[listOfNodes[j]])
-      
+      '''
       distance=0
       for k in range(len(total_tps)):
         distance=distance+math.pow(abs(total_tps[k][listOfNodes[i]]-total_tps[k][listOfNodes[j]]),2)        
       distance=math.sqrt(distance)
-      
-      #distance=calculPearson(listOfNodes, i, j, total_tps)
+      '''
+      distance=calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total_tps)
       #if distance < 0.05 and expression_lvl[listOfNodes[i]] != 0:
-      if distance < 2 and distance != 0:
+      if distance < 1:
         newEdge = distanceGraph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = distance
   return distanceGraph
+  
+def calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total_tps):
+  Nb=len(total_tps)
+  produit=0
+  somme_j=0
+  somme_j_carre=0
+  for k in range(Nb):
+    value_k_of_j=total_tps[k][listOfNodes[j]]
+    produit=produit+value_k_of_i*value_k_of_j
+    somme_j=somme_j+value_k_of_j
+    somme_j_carre=somme_j_carre+math.pow(value_k_of_j,2)
+  denominator=math.sqrt((Nb*somme_i_carre-math.pow(somme_i,2)))*math.sqrt((Nb*somme_j_carre-math.pow(somme_j,2)))
+  if denominator==0:
+    return 1
+  else:
+    r_value=(Nb*produit-somme_i*somme_j)/denominator
+    print r_value
+    return 1-r_value
 
 
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
@@ -134,29 +162,6 @@ def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   for sousGraph in graph.getSubGraphs():
     partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
 '''
-
-    
-def calculPearson(listOfNodes, i, j, total_tps):
-  Nb=len(total_tps)
-  produit=0
-  somme_i=0
-  somme_j=0
-  somme_i_carre=0
-  somme_j_carre=0
-  for k in range(Nb):
-    value_k_of_i=total_tps[k][listOfNodes[i]]
-    value_k_of_j=total_tps[k][listOfNodes[j]]
-    produit=produit+value_k_of_i*value_k_of_j
-    somme_i=somme_i+value_k_of_i
-    somme_j=somme_j+value_k_of_j
-    somme_i_carre=somme_i_carre+math.pow(value_k_of_i,2)
-    somme_j_carre=somme_j_carre+math.pow(value_k_of_j,2)
-  denominator=math.sqrt((Nb*somme_i_carre-math.pow(somme_i,2))*(Nb*somme_j_carre-math.pow(somme_j,2)))
-  if denominator==0:
-    return 1
-  else:
-    r_value=(Nb*produit-somme_i*somme_j)/math.sqrt((Nb*somme_i_carre-math.pow(somme_i,2))*(Nb*somme_j_carre-math.pow(somme_j,2)))
-    return 1-r_value
   
   
 # Partie 3
@@ -342,11 +347,17 @@ def main(graph):
   viewTgtAnchorSize = working.getSizeProperty("viewTgtAnchorSize")
   timePoint = [tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s]
 
+  count=0
+  for i in graph.getNodes():
+    count=count+1
+    if count >100:
+      graph.delNode(i)
+
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
   partitionnement(distanceGraph, 3)
-  heatmap = createHeatmap(working, distanceGraph, timePoint)
+ # heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
-  colorHeatmap(heatmap)
-  construireGrille(distanceGraph, heatmap)
+  #colorHeatmap(heatmap)
+  #construireGrille(distanceGraph, heatmap)
