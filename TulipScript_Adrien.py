@@ -93,6 +93,8 @@ def createDistanceGraph(graph):
       distanceGraph.delNode(n)
     else:
       listOfNodes.append(n)
+  calculPearson(distanceGraph, listOfNodes, total_tps)
+  '''
   for i in range(len(listOfNodes)):
     somme_i=0
     somme_i_carre=0
@@ -102,20 +104,54 @@ def createDistanceGraph(graph):
       somme_i=somme_i+value_k_of_i
       somme_i_carre=somme_i_carre+math.pow(value_k_of_i,2)  
     for j in range(i+1,len(listOfNodes)):
-      #distance = abs(expression_lvl[listOfNodes[i]]-expression_lvl[listOfNodes[j]])
       '''
+  '''
       distance=0
       for k in range(len(total_tps)):
         distance=distance+math.pow(abs(total_tps[k][listOfNodes[i]]-total_tps[k][listOfNodes[j]]),2)        
       distance=math.sqrt(distance)
       '''
+  '''
       distance=calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total_tps)
-      #if distance < 0.05 and expression_lvl[listOfNodes[i]] != 0:
-      if distance < 1:
+      if distance < 2:
         newEdge = distanceGraph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = distance
+        '''
   return distanceGraph
   
+
+def calculPearson(graph, listOfNodes, total_tps):
+  sommeListe=[]
+  somme_carreListe=[]
+  Nb=len(total_tps)
+  poids = graph.getDoubleProperty("Weight")
+  for i in range(len(listOfNodes)):
+    somme_i=0
+    somme_i_carre=0
+    for k in range(Nb):
+      value_k_of_i=total_tps[k][listOfNodes[i]]
+      somme_i=somme_i+value_k_of_i
+      somme_i_carre=somme_i_carre+math.pow(value_k_of_i,2)
+    sommeListe.append(somme_i)
+    somme_carreListe.append(somme_i_carre)
+  for i in range(len(listOfNodes)):
+    for j in range(i+1,len(listOfNodes)):
+      somme_produit=0
+      for k in range(Nb):
+        value_k_of_i=total_tps[k][listOfNodes[i]]
+        value_k_of_j=total_tps[k][listOfNodes[j]]
+        somme_produit=somme_produit+(value_k_of_i*value_k_of_j)      
+      denominator=math.sqrt((Nb*somme_carreListe[i]-math.pow(sommeListe[i],2)))*math.sqrt((Nb*somme_carreListe[j]-math.pow(sommeListe[j],2)))
+      if denominator==0:
+        r_value=0
+      else:
+        r_value=(Nb*somme_produit-sommeListe[i]*sommeListe[j])/denominator
+      distance=1-r_value
+      if distance < 0.5:
+        newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
+        poids[newEdge] = distance
+  
+'''
 def calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total_tps):
   Nb=len(total_tps)
   produit=0
@@ -123,16 +159,17 @@ def calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total
   somme_j_carre=0
   for k in range(Nb):
     value_k_of_j=total_tps[k][listOfNodes[j]]
-    produit=produit+value_k_of_i*value_k_of_j
+    produit=produit+(value_k_of_i*value_k_of_j)
     somme_j=somme_j+value_k_of_j
     somme_j_carre=somme_j_carre+math.pow(value_k_of_j,2)
+    print(somme_j)
   denominator=math.sqrt((Nb*somme_i_carre-math.pow(somme_i,2)))*math.sqrt((Nb*somme_j_carre-math.pow(somme_j,2)))
   if denominator==0:
     return 1
   else:
     r_value=(Nb*produit-somme_i*somme_j)/denominator
-    print r_value
     return 1-r_value
+'''
 
 
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
@@ -347,11 +384,13 @@ def main(graph):
   viewTgtAnchorSize = working.getSizeProperty("viewTgtAnchorSize")
   timePoint = [tp1_s, tp2_s, tp3_s, tp4_s, tp5_s, tp6_s, tp7_s, tp8_s, tp9_s, tp10_s, tp11_s, tp12_s, tp13_s, tp14_s, tp15_s, tp16_s, tp17_s]
 
+  '''
   count=0
-  for i in graph.getNodes():
+  for i in working.getNodes():
     count=count+1
     if count >100:
-      graph.delNode(i)
+      working.delNode(i)
+  '''
 
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
