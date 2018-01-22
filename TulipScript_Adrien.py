@@ -14,6 +14,8 @@
 #   * Ctrl + Space  : show auto-completion dialog.
 
 from tulip import tlp
+import scipy
+from scipy import stats
 import random
 import math
 
@@ -35,9 +37,6 @@ import math
 def pretraitement(graph, Locus, Negative, Positive, viewBorderColor, viewLabel, viewLayout, viewSize):
   size = 1000
   for n in graph.getNodes():
-    x = random.random() * size
-    y = random.random() * size
-    viewLayout[n] = tlp.Coord(x, y, 0)
     viewSize[n] = tlp.Size(10000,3000,10)
     viewLabel[n] = Locus[n]
   for n in graph.getEdges():
@@ -48,8 +47,7 @@ def pretraitement(graph, Locus, Negative, Positive, viewBorderColor, viewLabel, 
         viewBorderColor[n] = tlp.Color.Blue
     elif Positive[n] == True:
       viewBorderColor[n] = tlp.Color.Green
-  for n in graph.getNodes():
-    viewBorderColor[n] = tlp.Color.Red
+    
 
 def applyModelForce(graph, viewLayout):
   params = tlp.getDefaultPluginParameters('FM^3 (OGDF)', graph)
@@ -118,8 +116,30 @@ def createDistanceGraph(graph):
         poids[newEdge] = distance
         '''
   return distanceGraph
-  
 
+
+def calculPearson(graph, listOfNodes, total_tps):
+  poids = graph.getDoubleProperty("Weight")  
+  Nb=len(total_tps)
+  listTpsAll=[]
+  for i in range(len(listOfNodes)):
+    listTps_i=[]
+    for k in range(Nb):
+      listTps_i.append(total_tps[k][listOfNodes[i]])
+    listTpsAll.append(listTps_i)
+  for i in range(len(listOfNodes)):
+    for j in range(i+1,len(listOfNodes)):
+      pearson=scipy.stats.pearsonr(listTpsAll[i], listTpsAll[i])[0]
+      if pearson > 0.95:
+        newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
+        poids[newEdge] = pearson
+
+
+
+    
+  
+  
+'''
 def calculPearson(graph, listOfNodes, total_tps):
   sommeListe=[]
   somme_carreListe=[]
@@ -147,29 +167,12 @@ def calculPearson(graph, listOfNodes, total_tps):
       else:
         r_value=(Nb*somme_produit-sommeListe[i]*sommeListe[j])/denominator
       distance=1-r_value
-      if distance < 0.5:
+      if distance < 0.9:
         newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
-        poids[newEdge] = distance
-  
+        poids[newEdge] = r_value
 '''
-def calculPearson(listOfNodes, i, value_k_of_i, somme_i, somme_i_carre, j, total_tps):
-  Nb=len(total_tps)
-  produit=0
-  somme_j=0
-  somme_j_carre=0
-  for k in range(Nb):
-    value_k_of_j=total_tps[k][listOfNodes[j]]
-    produit=produit+(value_k_of_i*value_k_of_j)
-    somme_j=somme_j+value_k_of_j
-    somme_j_carre=somme_j_carre+math.pow(value_k_of_j,2)
-    print(somme_j)
-  denominator=math.sqrt((Nb*somme_i_carre-math.pow(somme_i,2)))*math.sqrt((Nb*somme_j_carre-math.pow(somme_j,2)))
-  if denominator==0:
-    return 1
-  else:
-    r_value=(Nb*produit-somme_i*somme_j)/denominator
-    return 1-r_value
-'''
+
+
 
 
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
@@ -395,8 +398,8 @@ def main(graph):
   pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
   applyModelForce(working, viewLayout)
   distanceGraph = createDistanceGraph(working)
-  partitionnement(distanceGraph, 3)
- # heatmap = createHeatmap(working, distanceGraph, timePoint)
+  partitionnement(distanceGraph, 1)
+  heatmap = createHeatmap(working, distanceGraph, timePoint)
   #heatmap = working.getSubGraph("heatmap")
-  #colorHeatmap(heatmap)
-  #construireGrille(distanceGraph, heatmap)
+  colorHeatmap(heatmap)
+  construireGrille(distanceGraph, heatmap)
