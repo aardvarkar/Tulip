@@ -44,10 +44,10 @@ def pretraitement(graph, Locus, Negative, Positive, viewBorderColor, viewLabel, 
       if Positive[n] == True:
         viewBorderColor[n] = tlp.Color.Black
       else:
-        viewBorderColor[n] = tlp.Color.Blue
+        viewBorderColor[n] = tlp.Color(0,0,225)
     elif Positive[n] == True:
-      viewBorderColor[n] = tlp.Color.Green
-    
+      viewBorderColor[n] = tlp.Color(0,200,0)
+      
 
 def applyModelForce(graph, viewLayout):
   params = tlp.getDefaultPluginParameters('FM^3 (OGDF)', graph)
@@ -167,16 +167,21 @@ def calculPearson(graph, listOfNodes, total_tps):
       else:
         r_value=(Nb*somme_produit-sommeListe[i]*sommeListe[j])/denominator
       distance=1-r_value
-      if r_value > 0.9:
+      if r_value > 0.8:
       #if distance < 0.1:
         newEdge = graph.addEdge(listOfNodes[i], listOfNodes[j])
         poids[newEdge] = r_value
         #poids[newEdge] = distance
+#  count=0
+#  for n in graph.getNodes():
+#    if graph.deg(n)==0:
+#      count += 1
+#  print(graph.numberOfNodes())
+#  print(count)
+  
 
 
-
-
-
+'''
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   if currentPartition == nbPartitionMax:
     return None
@@ -189,22 +194,34 @@ def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   success = graph.applyAlgorithm('Equal Value', params)
   for sousGraph in graph.getSubGraphs():
     partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
-
 '''
+
 def partitionnement(graph,nbPartitionMax = 1, currentPartition = 0):
   if currentPartition == nbPartitionMax:
     return None
-  params=tlp.getDefaultPluginParameters('Strength Clustering', graph)
-  params['metric'] = graph.getDoubleProperty("Weight")
+    
+  poids = graph.getDoubleProperty("Weight")
+  min_lvl = poids.getEdgeDoubleMin()
+  max_lvl = poids.getEdgeDoubleMax()
+  for edge in graph.getEdges():
+    poids[edge]=(poids[edge]-min_lvl)/(max_lvl-min_lvl)
+    
+  params=tlp.getDefaultPluginParameters('MCL Clustering')
+  params['weights'] = graph.getDoubleProperty("Weight")
   resultMetric = graph.getDoubleProperty('resultMetric' + str(currentPartition+1))
-  success = graph.applyDoubleAlgorithm('Strength Clustering', resultMetric, params)
+  success = graph.applyDoubleAlgorithm('MCL Clustering', resultMetric, params)
   params = tlp.getDefaultPluginParameters('Equal Value', graph)
   params['Property'] = resultMetric
   success = graph.applyAlgorithm('Equal Value', params)
   for sousGraph in graph.getSubGraphs():
-    partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
-'''
+#    poids = sousGraph.getDoubleProperty("Weight")
+#    min_lvl = poids.getEdgeDoubleMin()
+#    max_lvl = poids.getEdgeDoubleMax()
+#    for edge in sousGraph.getEdges():
+#      poids[edge]=(poids[edge]-min_lvl)/(max_lvl-min_lvl)
   
+    partitionnement(sousGraph, nbPartitionMax, currentPartition+1)
+    
   
 # Partie 3
 
@@ -230,7 +247,6 @@ def createHeatmap(graph, distanceGraph, timePoint):
   for n in heatmap.getNodes():
     count=count+1
     nodesListe.append(n)
-  print(count)
   for n in nodesListe:
     expression_lvl[n]=timePoint[0][n]
     tps[n]=1
@@ -252,7 +268,7 @@ def colorHeatmap(graph):
   min_lvl = expression_lvl.getNodeDoubleMin()
   max_lvl = expression_lvl.getNodeDoubleMax()
   colorScale = tlp.ColorScale([])
-  colors = [tlp.Color.Blue, tlp.Color.Red]
+  colors = [tlp.Color.Yellow, tlp.Color.Red]
   colorScale.setColorScale(colors)
   for n in graph.getNodes():
     viewColor[n]=colorScale.getColorAtPos((expression_lvl[n]-min_lvl)/(max_lvl-min_lvl))
