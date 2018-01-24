@@ -485,7 +485,7 @@ def trouverRegule(graph, distanceGraph, regulateurs):
     print(len(genes_regules))
     findCluster(distanceGraph, genes_regules)
     fileNames = open("input" + str(counterOfRegulateurs) + ".txt", "w")
-    fileNames.write(Locus[regulateur] + "\n")
+    #fileNames.write(Locus[regulateur] + "\n")
     for node in genes_regules:
       fileNames.write(Locus[node] + "\n")
     fileNames.close()
