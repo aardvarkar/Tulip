@@ -465,9 +465,34 @@ def getIncrement(rootGraph, gr, tmp = 0):
 def trouverRegulateur(graph):
   regulators=[]
   for i in graph.getNodes():
-    if graph.deg(i) > 399:
+    if graph.deg(i) > 50:
       regulators.append(i)
   return regulators
+  
+def trouverRegule(graph, distanceGraph, regulateurs):
+  Locus = graph.getStringProperty("Locus")
+  Cluster = distanceGraph.getDoubleProperty("resultMetric1")
+  Negative = graph.getBooleanProperty("Negative")
+  Positive = graph.getBooleanProperty("Positive")
+  counterOfRegulateurs = 1
+  for regulateur in regulateurs:
+    genes_regules = []
+    print("Genes regules pour " + Locus[regulateur] + " appartenant à " + str(Cluster[regulateur]))
+    for node in graph.getInOutNodes(regulateur):
+      edge = graph.existEdge(node, regulateur, directed=False)
+#      if Positive[edge] == True and Negative[edge] == False:
+      genes_regules.append(node)
+    print(len(genes_regules))
+    findCluster(distanceGraph, genes_regules)
+    fileNames = open("input" + str(counterOfRegulateurs) + ".txt", "w")
+    fileNames.write(Locus[regulateur] + "\n")
+    for node in genes_regules:
+      fileNames.write(Locus[node] + "\n")
+    fileNames.close()
+    counterOfRegulateurs += 1
+  
+      
+    
   
 def findCluster(graph, nodes):
   partition = graph.getDoubleProperty("resultMetric1")
@@ -480,7 +505,8 @@ def findCluster(graph, nodes):
       else:
         clusters[cluster] = 1
     except:
-      print("Node " + str(n) + " has a null expression level")
+      pass
+      #print("Node " + str(n) + " has a null expression level")
   for key in clusters.keys():
     print("Nodes at cluster " + str(key) + " : " + str(clusters[key]))
 
@@ -569,3 +595,4 @@ def main(graph):
   tmp=trouverRegulateur(clone)
   print(tmp)
   findCluster(distanceGraph, tmp)
+  trouverRegule(clone, distanceGraph, tmp)
