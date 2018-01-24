@@ -91,7 +91,7 @@ def createDistanceGraph(graph):
       distanceGraph.delNode(n)
     else:
       listOfNodes.append(n)
-  calculPearson(distanceGraph, listOfNodes, total_tps)
+  calculPearson(distanceGraph, listOfNodes, total_tps)        
   '''
   for i in range(len(listOfNodes)):
     somme_i=0
@@ -298,7 +298,7 @@ def construireGrille(gr):
         layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
 '''
         
-
+'''
 def construireGrille(distance, gr):
     increment = {}
     tmp = 0
@@ -324,11 +324,6 @@ def construireGrille(distance, gr):
         if currentLocus in locusToY :
           y = locusToY[currentLocus]
         else:
-          '''
-          print(int(groupes[n]))
-          print(tmp[int(groupes[n])])
-          print(increment[tmp[int(groupes[n])]])
-          '''
           if groupes[n] not in count:
             count[groupes[n]] = 0
           y = increment[groupes[n]] + count[groupes[n]]
@@ -349,24 +344,164 @@ def getIncrement(gr):
   for i in range(len(listeTmp)):
     liste.append(listeTmp[i] + liste[i])
   return liste
+'''
+
+def construireGrille(distance, gr):
+    increment = getIncrement(distance, distance)
+    positionY = distance.getDoubleProperty("PositionY")
+  
+    layout = gr.getLayoutProperty("viewLayout")
+    tps = gr.getDoubleProperty("Tps")
+    viewSize = gr.getSizeProperty("viewSize")
+    decalageX = 100
+    decalageY = 1.5
+    Locus = distance.getStringProperty("Locus")
+    locusToY = {}
+    for node in distance.getNodes():
+      locusToY[Locus[node]] = positionY[node]
+    Locus = gr.getStringProperty("Locus")
+    count = {}
+    for n in gr.getNodes():
+        currentLocus = Locus[n]
+        viewSize[n]=tlp.Size(decalageX,decalageY,1)
+        x = tps[n]
+        y = locusToY[Locus[n]]
+        layout[n] = tlp.Coord(x * decalageX, y * decalageY, 0)
+#        if currentLocus in locusToY :
+#          y = locusToY[currentLocus]
+#        else:
+#          '''
+#          print(int(groupes[n]))
+#          print(tmp[int(groupes[n])])
+#          print(increment[tmp[int(groupes[n])]])
+#          '''
+#          for node in distance.getNodes():
+#            if Locus[node] == currentLocus:
+#              y = positionY[node]
+#          locusToY[currentLocus] = y
+          
+#          currentDepth = 1
+#          groupe = gr.getDoubleProperty("resultMetric" + str(currentDepth))
+#          tmp = increment[groupe[n]]
+#          currentDepth += 1
+#          groupe = gr.getDoubleProperty("resultMetric" + str(currentDepth))
+#          tmp = tmp[groupe[n]]
+#          currentDepth += 1
+#          groupe = gr.getDoubleProperty("resultMetric" + str(currentDepth))
+#          tmp[groupe[n]] += 1
+#          y = tmp[groupe[n]]
+##          print(y)
+#          locusToY[currentLocus] = y
+          
+#          if groupes[n] not in count:
+#              count[groupes[n]] = {}
+#          branch = count[groupes[n]]
+#          currentDepth = 2            
+#          while currentDepth < maxDepth:
+#            groupes = gr.getDoubleProperty("resultMetric" + str(currentDepth))
+#            if groupes[n] not in branch:
+#              branch[groupes[n]] = {}
+#            branch = branch[groupes[n]]
+#          
+#          y = increment[groupes[n]] + count[groupes[n]]
+#          count[groupes[n]] += 1
+#          locusToY[currentLocus] = y
+       
+        
+        
+#def getIncrement(gr, depth = 1, tmp = 0):
+#      
+#    increment = {}
+#    for graph in gr.getSubGraphs():
+#      resultMetric = graph.getDoubleProperty("resultMetric"+ str(depth))[graph.getOneNode()]
+#      tmp += graph.numberOfNodes()
+#      if graph.numberOfSubGraphs() > 0:
+#        increment[resultMetric] = getIncrement(graph, depth+1, tmp)
+#      else:
+#        increment[resultMetric] = tmp
+#    return increment
+    
+def getIncrement(rootGraph, gr, tmp = 0):
+#  print("**********************")
+
+  
+  for graph in gr.getSubGraphs():
+    if graph.numberOfSubGraphs() == 0:
+#      print("there are no subgraphs")
+#      print("tmp = ", tmp)
+#      print(graph.numberOfNodes())
+      positionY = rootGraph.getDoubleProperty("PositionY")
+      y = 0
+      for n in graph.getNodes():
+        positionY[n] = tmp + y
+        y += 1
+      tmp += graph.numberOfNodes()
+    else:
+#      print("there are subgraphs")
+      tmp = getIncrement(rootGraph, graph, tmp)
+  return tmp
+      
+  
+  
+#  if gr.numberOfSubGraphs() < 0:
+#    return gr.numberOfNodes()
+#  increment = {}
+#  for graph in gr.getSubGraphs():
+#    resultMetric = graph.getDoubleProperty("resultMetric"+ str(depth))[graph.getOneNode()]
+#    t = rootGraph.getDoubleProperty("resultMetric"+ str(depth))
+#    for n in graph.getNodes():
+#      t[n] = resultMetric
+#    tmp += getIncrement(rootGraph, graph, depth+1, tmp)
+#    increment[resultMetric] = 
+#    else:
+#      increment[resultMetric] = tmp
+#  return increment
 
 
 #def changeGrille(graph):
 
+# Partie 4
+
+def trouverRegulateur(graph):
+  regulators=[]
+  for i in graph.getNodes():
+    if graph.deg(i) > 399:
+      regulators.append(i)
+  return regulators
+  
+def findCluster(graph, nodes):
+  partition = graph.getDoubleProperty("resultMetric1")
+  clusters = {}
+  for n in nodes:
+    try:
+      cluster = partition[n]
+      if cluster in clusters:
+        clusters[cluster] += 1
+      else:
+        clusters[cluster] = 1
+    except:
+      print("Node " + str(n) + " has a null expression level")
+  for key in clusters.keys():
+    print("Nodes at cluster " + str(key) + " : " + str(clusters[key]))
+
+
+
 # MAIN
 
 def main(graph):
+  working=graph.getSubGraph("Working")
+  distanceGraph=working.getSubGraph("distanceGraph")
   #
-  if graph.getSubGraph("Clone") == None:
-    clone = graph.addCloneSubGraph("Clone")
-  else :
-    clone=graph.getSubGraph("Clone")
-  if graph.getSubGraph("Working") == None:
-    working = graph.addCloneSubGraph("Working")
-  else :
-    working=graph.getSubGraph("Working")
-    working.clear()
-    tlp.copyToGraph(working, clone)
+#  if graph.getSubGraph("Clone") == None:
+#    clone = graph.addCloneSubGraph("Clone")
+#  else :
+#    clone=graph.getSubGraph("Clone")
+#  if graph.getSubGraph("Working") == None:
+#    working = graph.addCloneSubGraph("Working")
+#  else :
+#    working=graph.getSubGraph("Working")
+#    working.clear()
+#    tlp.copyToGraph(working, clone)
 
   Locus = working.getStringProperty("Locus")
   Negative = working.getBooleanProperty("Negative")
@@ -421,11 +556,16 @@ def main(graph):
   '''
 
 
-  pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
-  applyModelForce(working, viewLayout)
-  distanceGraph = createDistanceGraph(working)
-  partitionnement(distanceGraph, 3)
-  heatmap = createHeatmap(working, distanceGraph, timePoint)
-  #heatmap = working.getSubGraph("heatmap")
-  colorHeatmap(heatmap)
-  construireGrille(distanceGraph, heatmap)
+#  pretraitement(working, Locus, Negative, Positive, viewColor, viewLabel, viewLayout, viewSize)
+#  applyModelForce(working, viewLayout)
+#  distanceGraph = createDistanceGraph(working)
+#  maxDepth = 3
+#  partitionnement(distanceGraph, maxDepth)
+#  heatmap = createHeatmap(working, distanceGraph, timePoint)
+#  #heatmap = working.getSubGraph("heatmap")
+#  colorHeatmap(heatmap)
+#  construireGrille(distanceGraph, heatmap)
+  clone=graph.getSubGraph("Clone")
+  tmp=trouverRegulateur(clone)
+  print(tmp)
+  findCluster(distanceGraph, tmp)
