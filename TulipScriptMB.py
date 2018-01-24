@@ -415,7 +415,17 @@ def getIncrement(rootGraph, gr, tmp = 0):
     
         
     
-      
+def findCluster(graph, nodes):
+  partition = graph.getDoubleProperty("resultMetric1")
+  clusters = {}
+  for n in nodes:
+    cluster = partition[n]
+    if cluster in clusters:
+      clusters[cluster] += 1
+    else:
+      clusters[cluster] = 1
+  for key in clusters.keys():
+    print("Nodes at cluster " + str(key) + " : " + clusters[key])
 
 
 #def changeGrille(graph):
