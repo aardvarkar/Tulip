@@ -1,0 +1,9 @@
+Le script BinetRohan.py est à charger dans Tulip et donne le résultat pour les 3 premières parties du projet.
+Ce script crée des fichiers dans le répértoire courant qui sont des listes de gènes.
+
+Le second script Python (displayAnnotation.py) permet de réaliser l'enrichissement. Il faut le lancer dans un shell avec la commande :
+"python displayAnnotation.py listeGenes"
+où listeGenes est un des fichiers créés par BinetRohan.py.
+
+Ce second script ne pouvait pas être lancé dans Tulip car nous n'avons pas réussi à lancer les bibliothèques nécessaires dans Tulip.
+
