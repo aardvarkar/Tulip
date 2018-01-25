@@ -326,15 +326,15 @@ def findCluster(graph, nodes):
     print("Nodes at cluster " + str(key) + " : " + str(clusters[key]))
     
     
-def saveClusters(graph, distanceGraph, clusterNumber):
+def saveClusters(graph, clusterNumber):
   '''
   clusterNumber est le numéro du cluster pour lequel on souhaite enregistrer les gènes.
   Cette fonction récupère tous les gènes appartenant au cluster et enregistre leurs noms dans un fichier appelé genesCluster + numéro du cluster
   '''
   Locus = graph.getStringProperty("Locus")
   f = open("genesCluster" + str(clusterNumber) + ".txt", "w")
-  partition = distanceGraph.getDoubleProperty("cluster1")
-  for node in distanceGraph.getNodes():
+  partition = graph.getDoubleProperty("cluster1")
+  for node in graph.getNodes():
     if partition[node] == clusterNumber:
       f.write(Locus[node] + "\n")
   f.close()
@@ -415,3 +415,5 @@ def main(graph):
   #clone=graph.getSubGraph("Clone")
   regulateurs=trouverRegulateur(clone)
   trouverRegule(clone, regulateurs)
+#  saveClusters(distanceGraph, 0.0)
+#  saveClusters(distanceGraph, 1.0)
